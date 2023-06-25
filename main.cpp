@@ -21,6 +21,8 @@
 //    return a.exec();
 //}
 
+#include "osgmanager.h"
+
 class ImGuiInitOperation : public osg::Operation
 {
 public:
@@ -42,147 +44,6 @@ public:
     }
 };
 
-
-osg::ref_ptr<osg::Geometry> createAxis() {
-    osg::ref_ptr<osg::Geometry> geometry (new osg::Geometry());
-
-    osg::ref_ptr<osg::Vec3Array> vertices (new osg::Vec3Array());
-    vertices->push_back (osg::Vec3 ( 0.0, 0.0, 0.0));
-    vertices->push_back (osg::Vec3 ( 10.0, 0.0, 0.0));
-    vertices->push_back (osg::Vec3 ( 0.0, 0.0, 0.0));
-    vertices->push_back (osg::Vec3 ( 0.0, 10.0, 0.0));
-    vertices->push_back (osg::Vec3 ( 0.0, 0.0, 0.0));
-    vertices->push_back (osg::Vec3 ( 0.0, 0.0, 10.0));
-    geometry->setVertexArray (vertices.get());
-
-    osg::ref_ptr<osg::Vec4Array> colors (new osg::Vec4Array());
-    colors->push_back (osg::Vec4 (1.0f, 0.0f, 0.0f, 1.0f));
-    colors->push_back (osg::Vec4 (1.0f, 0.0f, 0.0f, 1.0f));
-    colors->push_back (osg::Vec4 (0.0f, 1.0f, 0.0f, 1.0f));
-    colors->push_back (osg::Vec4 (0.0f, 1.0f, 0.0f, 1.0f));
-    colors->push_back (osg::Vec4 (0.0f, 0.0f, 1.0f, 1.0f));
-    colors->push_back (osg::Vec4 (0.0f, 0.0f, 1.0f, 1.0f));
-    geometry->setColorArray (colors.get(), osg::Array::BIND_PER_VERTEX);
-    geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINES,0,6));
-    return geometry.release();
-}
-
-osg::ref_ptr<osg::Geometry> createPoints()
-{
-    // create Geometry object to store all the vertices and lines primitive.
-    osg::Geometry* polyGeom = new osg::Geometry();
-
-    // note, first coord at top, second at bottom, reverse to that buggy OpenGL image..
-    osg::Vec3 myCoords[] =
-    {
-        // TRIANGLES 6 vertices, v0..v5
-        // note in anticlockwise order.
-        osg::Vec3(-1.12056, -2.15188e-09, -0.840418),
-        osg::Vec3(-0.95165, -2.15188e-09, -0.840418),
-        osg::Vec3(-1.11644, 9.18133e-09, -0.716827),
-
-        // note in anticlockwise order.
-        osg::Vec3(-0.840418, 9.18133e-09, -0.778623),
-        osg::Vec3(-0.622074, 9.18133e-09, -0.613835),
-        osg::Vec3(-1.067, 9.18133e-09, -0.609715),
-
-        // TRIANGLE STRIP 6 vertices, v6..v11
-        // note defined top point first,
-        // then anticlockwise for the next two points,
-        // then alternating to bottom there after.
-        osg::Vec3(-0.160668, -2.15188e-09, -0.531441),
-        osg::Vec3(-0.160668, -2.15188e-09, -0.749785),
-        osg::Vec3(0.0617955, 9.18133e-09, -0.531441),
-        osg::Vec3(0.168908, -2.15188e-09, -0.753905),
-        osg::Vec3(0.238942, -2.15188e-09, -0.531441),
-        osg::Vec3(0.280139, -2.15188e-09, -0.823939),
-
-        // TRIANGLE FAN 5 vertices, v12..v16
-        // note defined in anticlockwise order.
-        osg::Vec3(0.844538, 9.18133e-09, -0.712708),
-        osg::Vec3(1.0258, 9.18133e-09, -0.799221),
-        osg::Vec3(1.03816, -2.15188e-09, -0.692109),
-        osg::Vec3(0.988727, 9.18133e-09, -0.568518),
-        osg::Vec3(0.840418, -2.15188e-09, -0.506723),
-
-    };
-
-    int numCoords = sizeof(myCoords)/sizeof(osg::Vec3);
-
-    osg::Vec3Array* vertices = new osg::Vec3Array(numCoords,myCoords);
-
-    polyGeom->setVertexArray(vertices);
-
-    polyGeom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::TRIANGLES,0,6));
-    polyGeom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::TRIANGLE_STRIP,6,6));
-    polyGeom->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::TRIANGLE_FAN,12,5));
-
-    return polyGeom;
-}
-
-
-class OsgManager {
-public:
-    static OsgManager* getInstance() {
-        if (instance == nullptr) {
-            instance = new OsgManager();
-        }
-        return instance;
-    }
-
-    void setView(osgViewer::Viewer &pviewer) {
-        m_pViewer = &pviewer;
-        m_pViewer->setSceneData(root);
-    }
-
-    void show() {
-        osg::ref_ptr<osg::Geometry> geom = createPoints();
-        osg::StateSet* stateset = geom->getOrCreateStateSet();
-
-        osg::Program *program = new osg::Program;
-        program->addShader(osgDB::readRefShaderFile(osg::Shader::VERTEX, "./../vertex.glsl"));
-        program->addShader(osgDB::readRefShaderFile(osg::Shader::FRAGMENT, "./../fragment.glsl"));
-        program->addBindAttribLocation("in_vertex", 1);
-        program->addBindAttribLocation("in_normal", 2);
-        stateset->setAttribute(program);
-
-        osg::Vec3Array *vertex = (osg::Vec3Array *)(geom->getVertexArray());
-        geom->setVertexAttribArray(1, vertex);
-        osg::Vec3Array *normal = new osg::Vec3Array;
-        for (int i = 0; i < vertex->size(); ++i)
-            normal->push_back(osg::Vec3(0.f, 0.f, 1.f));
-        geom->setVertexAttribArray(2, normal);
-
-        //osg::Vec3f lightDir( 0., 0.5, 1. );
-        osg::Vec3f lightDir( 0., 0, 5.f );
-        lightDir.normalize();
-        stateset->addUniform( new osg::Uniform( "lightDir", lightDir ) );
-
-        root->addChild(geom);
-    }
-
-    void reset() {
-        root->removeChildren(0, root->getNumChildren());
-    }
-
-    osg::ref_ptr<osg::Geode> getRoot() {
-        return root;
-    }
-
-private:
-    OsgManager() {
-        root = new osg::Geode;
-        root->addChild(createAxis());
-    }
-
-    static OsgManager* instance;
-    osg::ref_ptr<osgViewer::Viewer> m_pViewer;
-    osg::ref_ptr<osg::Geode> root;
-};
-
-
-OsgManager* OsgManager::instance;
-
 class ImGuiDemo : public OsgImGuiHandler
 {
 protected:
@@ -193,6 +54,9 @@ protected:
         ImGui::Begin("Hello, world!");
         if (ImGui::Button("click button")) {
             OsgManager::getInstance()->show();
+        }
+        if (ImGui::Button("reconstruction")) {
+            OsgManager::getInstance()->reconstruct("/Users/channyhuang/Documents/projects/PointCloudReconstruction/thermocolorlab");
         }
         if (ImGui::Button("reset button")) {
             OsgManager::getInstance()->reset();

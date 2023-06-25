@@ -14,9 +14,12 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 
 set(osg_path /Users/channyhuang/Documents/thirdlib/OpenSceneGraph/include)
 set(osg_lib /Users/channyhuang/Documents/thirdlib/OpenSceneGraph/build/lib)
+set(COMMON_PATH ./../commonClass)
+set(COMMONGEOM_PATH ./../commonClass/commonGeometry)
 
 include_directories(${osg_path})
 include_directories("/usr/local/include")
+include_directories(${COMMON_PATH})
 
 set(IMGUI_PATH ./../commonClass/imgui)
 include_directories("./../commonClass/imgui")
@@ -32,12 +35,15 @@ file(GLOB ALL_SOURCE ./*.cpp)
 file(GLOB ALL_HEAD ./*.h)
 file(GLOB IMGUI_HEAD ${IMGUI_PATH}/*.h)
 file(GLOB IMGUI_SOURCE ${IMGUI_PATH}/*.cpp)
+file(GLOB COMMONGeom_FILES ${COMMONGEOM_PATH}/*.h ${COMMONGEOM_PATH}/*.cpp)
 
 add_executable(PointCloudReconstruction
     ${ALL_SOURCE}
     ${ALL_HEAD}
     ${IMGUI_HEAD}
     ${IMGUI_SOURCE}
+
+    ${COMMONGeom_FILES}
 )
 
 target_link_libraries(PointCloudReconstruction #[[Qt${QT_VERSION_MAJOR}::Core]]
