@@ -195,23 +195,27 @@ void OsgManager::reconstruct(const std::string& sFilePath) {
         std::vector<Vector2> points;
         osg::Vec3Array *vertex = (osg::Vec3Array *)geom->getVertexArray();
         float angle = 20.f;
+
+        Vector3 vNormal = Vector3(-std::sin(angle * Math::PI / 180.f), 0.f, std::cos(angle * Math::PI / 180.f));
+        vNormal.normalize();
+        Plane plane(vNormal, vNormal * 100.f);
+
         for (int j = 0; j < vertex->size(); ++j) {
             vTargetVertex->push_back(vertex->at(j));
             vTargetNormal->push_back(osg::Vec3(0, 0, 0));
 
-            Vector3 vNormal = Vector3(std::cos(angle * Math::PI / 180.f), std::sin(angle * Math::PI / 180.f), 0.f);
-            vNormal.normalize();
+            //ofs << "v " << vertex->at(j).x() << " " << vertex->at(j).y() << " " << vertex->at(j).z() << std::endl;
 
-            Plane plane(vNormal, vNormal * 100.f);
             Vector3 proj = plane.interate(Vector3(0), Vector3(vertex->at(j).x(), vertex->at(j).y(), vertex->at(j).z()));
 
-            points.push_back(Vector2(proj.x, proj.z));
+            points.push_back(Vector2(proj.y, proj.z));
         }
         pTargetGeom->setVertexArray(vTargetVertex);
 
         Graph_Geometry::Delaunay T;
         Graph_Geometry::GraphGeometry V = T.triangulate(points);
         std::vector<unsigned int> indices;
+
         for (int j = 0; j < V.faces.size(); ++j) {
             HalfEdge h = V.outerComponent(V.faces[j]);
             int p0 = V.origin(h).id;
@@ -222,16 +226,18 @@ void OsgManager::reconstruct(const std::string& sFilePath) {
             int i1 = T.mapIndex[pi];
             int i2 = T.mapIndex[pj];
             indices.push_back(i0);
-            indices.push_back(i1);
             indices.push_back(i2);
+            indices.push_back(i1);
 
             Triangle tri(Vector3(vertex->at(i0).x(), vertex->at(i0).y(), vertex->at(i0).z()),
                          Vector3(vertex->at(i1).x(), vertex->at(i1).y(), vertex->at(i1).z()),
                          Vector3(vertex->at(i2).x(), vertex->at(i2).y(), vertex->at(i2).z()));
             Vector3 triNormal = tri.getNormal();
+]
             vTargetNormal->at(i0) += osg::Vec3(triNormal.x, triNormal.y, triNormal.z);
             vTargetNormal->at(i1) += osg::Vec3(triNormal.x, triNormal.y, triNormal.z);
             vTargetNormal->at(i2) += osg::Vec3(triNormal.x, triNormal.y, triNormal.z);
+
         }
         pTargetGeom->setNormalArray(vTargetNormal);
         pTargetGeom->addPrimitiveSet(new osg::DrawElementsUInt(osg::PrimitiveSet::TRIANGLES, indices.size(), indices.data()));
