@@ -88,8 +88,8 @@ int main() {
 
     OsgManager::getInstance()->setView(pviewer);
 
-    pviewer.getCamera()->getGraphicsContext()->getState()->setUseModelViewAndProjectionUniforms(true);
-    pviewer.getCamera()->getGraphicsContext()->getState()->setUseVertexAttributeAliasing(true);
+    //pviewer.getCamera()->getGraphicsContext()->getState()->setUseModelViewAndProjectionUniforms(true);
+    //pviewer.getCamera()->getGraphicsContext()->getState()->setUseVertexAttributeAliasing(true);
 //    osg::ref_ptr<osg::Geode> root = new osg::Geode;
 //    root->addChild(createAxis());
 //    pviewer.setSceneData(root);

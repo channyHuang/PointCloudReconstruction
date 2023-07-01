@@ -168,6 +168,7 @@ std::vector<std::string> splitString(std::string str, char c = '\t') {
 }
 
 void OsgManager::reconstruct(const std::string& sFilePath) {
+
     char buff[10] = {0};
     char line[128] = {0};
     for (int i = 0; i < 9; ++i) {
@@ -201,7 +202,9 @@ void OsgManager::reconstruct(const std::string& sFilePath) {
         Plane plane(vNormal, vNormal * 100.f);
 
         for (int j = 0; j < vertex->size(); ++j) {
-            vTargetVertex->push_back(vertex->at(j));
+            osg::Vec3 vRotVertex = trans.preMult(vertex->at(j));
+
+            vTargetVertex->push_back(vRotVertex);
             vTargetNormal->push_back(osg::Vec3(0, 0, 0));
 
             //ofs << "v " << vertex->at(j).x() << " " << vertex->at(j).y() << " " << vertex->at(j).z() << std::endl;
@@ -233,7 +236,7 @@ void OsgManager::reconstruct(const std::string& sFilePath) {
                          Vector3(vertex->at(i1).x(), vertex->at(i1).y(), vertex->at(i1).z()),
                          Vector3(vertex->at(i2).x(), vertex->at(i2).y(), vertex->at(i2).z()));
             Vector3 triNormal = tri.getNormal();
-]
+
             vTargetNormal->at(i0) += osg::Vec3(triNormal.x, triNormal.y, triNormal.z);
             vTargetNormal->at(i1) += osg::Vec3(triNormal.x, triNormal.y, triNormal.z);
             vTargetNormal->at(i2) += osg::Vec3(triNormal.x, triNormal.y, triNormal.z);
